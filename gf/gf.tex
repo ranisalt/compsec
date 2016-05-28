@@ -1,0 +1,370 @@
+\documentclass[12pt]{article}
+\usepackage{sbc/template}
+\usepackage{amsmath,amssymb,color,enumitem,graphicx,listings,url}
+\usepackage[brazil]{babel}
+\usepackage[utf8]{inputenc}
+
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{mystyle}{
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{blue},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\footnotesize\ttfamily,
+    breaklines=true,
+    numbers=left
+}
+\lstset{style=mystyle}
+
+\sloppy
+
+\title{Aritmética em Corpos Finitos}
+
+\author{Ranieri Althoff}
+
+\address{Universidade Federal de Santa Catarina\\
+Departamento de Informática e Estatística\\
+Segurança em Computação}
+
+\begin{document}
+
+\maketitle
+
+\section{Algoritmo de Euclides}
+
+O algoritmo de Euclides é um método simples de encontrar o máximo divisor comum
+(GCD) entre dois números inteiros diferentes de zero. Foi desenvolvido pelo
+matemático homônimo por volta de 300 a.C. e é baseado no princípio de que o
+GCD entre dois números não muda quando um é subtraído pelo outro.
+
+É fácil verificar esta propriedade: suponha dois números $a$ e $b$ com um
+máximo divisor comum $n$ ($gcd(a, b) = n$, então $a = kn$ e $b = ln$, sendo
+todas as variáveis números inteiros. Ao subtrair $a$ por $b$, temos que
+$a-b = kn-ln = (k-l)n$, ou seja, o resultado continua sendo múltiplo de n.
+
+De forma análoga, é possível encontrar que $r = a - qb$, ou seja, subtraímos de
+$a$ a maior quantidade possível de $b$ (pela propriedade acima descrita
+$gcd(a, b) - gcd(b, a {\%} b)$ e usamos o resto $r$ para aplicar o GCD
+utilizando valores menores. Esse procedimento é repetido até que um dos valores
+seja zero, indicando que o outro é o GCD entre $a$ e $b$.
+
+A versão extendida do algoritmo, além de calcular o GCD, também encontra dois
+inteiros $\alpha$ e $\beta$ tal que $gcd(a, b) = a\alpha+b\beta$, chamados de
+coeficientes da \textbf{identidade de \textit{Bézout}}. Esse algoritmo é útil
+para encontrar o inverso multiplicativo de um número: se $a$ e $b$ são
+relativamente primos, $a\alpha \equiv 1 \pmod{b}$ e $b\beta \equiv 1 \pmod{a}$.
+
+\subsection{Exemplos}
+
+\begin{enumerate}[label=\textbf{\alph*})]
+    \setlength\itemsep{1em}
+
+    \item Algoritmo de Euclides para $gcd(9907321467, 941)$.
+        \begin{align*}
+            9907321467 &= 941 \times 10528503+144 \\
+            941 &= 144 \times 6+77 \\
+            144 &= 77 \times 1+67 \\
+            77 &= 67 \times 1+10 \\
+            67 &= 10 \times 6+7 \\
+            10 &= 7 \times 1+3 \\
+            7 &= 3 \times 2+1 \\
+            3 &= 1 \times 3+0
+        \end{align*}
+
+        Sendo no próximo passo $b = 0$, o valor final de $a$ e, portanto, o GCD
+        entre os dois números, 1. É possível ver que, logo no primeiro passo, o
+        maior número diminuiu por várias ordens de grandeza.
+
+    \item A identidade de \textit{Bézoit} pode ser encontrada se revertendo os
+        passos do algoritmo de Euclides, encontrando a inversa multiplicativa
+        de $a$ e $b$ módulo $b$ e $a$, respectivamente:
+
+        \begin{align*}
+            1 &= 7 + 3 \times (-2) \\
+            1 &= 7 + (10-7) \times (-2) \\
+            1 &= 7 \times 3 + 10 \times (-2) \\
+            1 &= (67 + 10 \times (-6)) \times 3 + 10 \times (-2) \\
+            1 &= 67 \times 3 + 10 \times (-20) \\
+            1 &= 67 \times 3 + (77-67) \times (-20) \\
+            1 &= 67 \times 23 + 77 \times (-20) \\
+            1 &= (144-77) \times 23 + 77 \times (-20) \\
+            1 &= 144 \times 23 + 77 \times (-43) \\
+            1 &= 144 \times 23 + (941 + 144 \times (-6)) \times (-43) \\
+            1 &= 144 \times 281 + 941 \times (-43) \\
+            1 &= (9907321467 + 941 \times (-10528503)) \times 281 + 941 \times (-43) \\
+            1 &= 9907321467 \times \textbf{281} + 941 \times (\textbf{-2958509386})
+        \end{align*}
+
+        Usando uma linguagem de programação, é fácil verificar que
+        $9907321467 * 281 \equiv 1 \pmod{941}$ e
+        $941 * -2958509386 \equiv 1 \pmod{9907321467}$.
+\end{enumerate}
+
+\section{Grupos, anéis e corpos}
+
+\subsection{Grupo}
+
+Um grupo $G$ é um conjunto, finito ou infinito, de elementos acompanhado de uma
+operação binária $*$ (chamada de operação do grupo) que satisfazem as seguintes
+propriedades fundamentais:
+
+\begin{description}
+    \setlength\itemsep{1em}
+
+    \item[Associatividade:] o agrupamento dos fatores não altera o resultado da
+        operação.
+        \newline
+        \begin{center}
+            $\forall a, b, c \in G, \quad (a*b)*c = a*(b*c)$
+        \end{center}
+
+    \item[Identidade:] existe um elemento identidade $e$ ou $1$ em $G$ tal que
+        todo elemento $a$ em $G$ aplicado com $e$ resulte no próprio $a$.
+        \newline
+        \begin{center}
+            $\forall a \in G, \quad a*e = e*a = a$.
+        \end{center}
+
+    \item[Inversa:] existe uma inversa $a^{-1}$ para cada elemento tal que todo
+        elemento $a$ em $G$ aplicado com sua inversa resulte na identidade $e$.
+        \newline
+        \begin{center}
+            $\forall a \in G, \quad a*a^{-1} = a^{-1}*a = e$
+        \end{center}
+
+\end{description}
+
+Um exemplo de grupo pode ser o conjunto ${0, 1}$ sob a operação lógica $\land$.
+
+\subsection{Anel}
+
+Mais restritivo que um grupo, um anel é um conjunto $G$ acompanhado de duas
+operações $+$ e $*$ (interpretados como adição e multiplicação) que satisfazem
+as seguintes propriedades fundamentais:
+
+\begin{description}
+    \setlength\itemsep{1em}
+
+    \item[Associatividade aditiva:] tal qual como a associatividade em grupos,
+        o agrupamento  dos fatores não altera o resultado da adição.
+        \newline
+        \begin{center}
+            $\forall a, b, c \in G, \quad (a+b)+c = a+(b+c)$
+        \end{center}
+
+    \item[Comutatividade aditiva:] a ordem dos fatores não altera o resultado
+        da adição.
+        \newline
+        \begin{center}
+            $\forall a, b \in G, \quad a+b = b+a$
+        \end{center}
+
+    \item[Identidade aditiva:] tal qual a identidade em grupos, existe um
+        elemento $0$ tal que todo elemento $a$ em $G$ adicionado a $0$ resulte
+        no próprio $a$.
+        \newline
+        \begin{center}
+            $\forall a \in G, \quad a+0 = 0+a = a$
+        \end{center}
+
+    \item[Inversa aditiva:] tal qual a inversa em grupos, existe uma inversa
+        $a^{-1}$ para cada elemento tal que todo elemento $a$ em $G$ adicionado
+        a sua inversa resulte na identidade $0$.
+        \newline
+        \begin{center}
+            $\forall a \in G, \quad a+(-a) = (-a)+a = 0$
+        \end{center}
+
+    \item[Distributividade:] a operação de multiplicação deve ser distributiva
+        sobre a operação de adição.
+        \newline
+        \begin{center}
+            $\forall a, b, c \in G, \quad a*(b+c) = (a*b)+(a*c) \land (b+c)*a = (b*a)+(c*a)$
+        \end{center}
+
+    \item[Associatividade multiplicativa:] a operação de multiplicação também é
+        associativa:
+        \newline
+        \begin{center}
+            $\forall a, b, c \in G, \quad (a*b)*c = a*(b*c)$
+        \end{center}
+
+\end{description}
+
+Um exemplo de anel infinito é o conjunto de números inteiros $\mathbb{Z}$, já
+que há a operação de adição e multiplicação que satisfaz todas as condições
+acima sobre esse conjunto.
+
+\subsection{Corpo}
+
+Um corpo é um conjunto $G$, satisfazendo todas as condições de um anel e
+adicionalmente todo elemento $a \in G$ diferente de zero possui inversa
+multiplicativa. Essa característica é conhecida como álgebra de divisão, porque
+é a propriedade que permite que um certo conjunto possua uma operação de
+divisão.
+
+Um corpo com uma quantidade finita de elementos é conhecido como um
+\textbf{corpo de Galois}. Os exemplos mais usados de corpos finitos são os
+conjuntos de números relativamente primos a $n$, denotados $\mathbb{Z}_{n}$.
+
+\section{Corpos primos e binários}
+
+Corpos finitos sempre tem um número de elementos primo ou potência de um primo,
+e para cada potência de primo $p^{n}$ existe apenas um (considerando corpos
+isomórficos como iguais) corpo finito $\mathbb{F}_{p^{n}}$.
+
+\subsection{Corpo primo}
+
+Um corpo finito $\mathbb{F}_{p}$, onde $p$ é um número primo, é chamado de
+corpo primo de ordem $p$ e contém as classes de congruencia módulo $p$, sendo
+os $p$ elementos denominados $0, 1, \ldots, p-1$. $a = b$ em $\mathbb{F}_{p}$
+significa $a \equiv b \pmod{p}$.
+
+O corpo finito $\mathbb{F}_{2}$ é um corpo primo que consiste dos elementos $0$
+e $1$ e satisfaz as seguintes operações:
+
+\begin{center}
+    $\begin{array}{ c | c c }
+        + & 0 & 1 \\ \hline
+        0 & 0 & 1 \\
+        1 & 1 & 1
+    \end{array}$
+    \hspace{4em}
+    $\begin{array}{ c | c c }
+        * & 0 & 1 \\ \hline
+        0 & 0 & 0 \\
+        1 & 0 & 1
+    \end{array}$
+\end{center}
+
+\subsection{Corpo binário}
+
+Um corpo finito de ordem $2^{m}$, onde $m \geq 1$, é chamado de corpo binário.
+Em geral, são corpos cujos elementos são polinômios, cujos coeficientes são $0$
+ou $1$ com grau máximo $m-1$ (\textit{e.g.} $x^{4} + x^{3} + x^{1} + 1$ para
+$m = 5$).
+
+O corpo finito $\mathbb{F}_{2^{3}}$ é composto pelos seguintes polinômios:
+
+\begin{center}
+    $\{x^{2}+x+1, x^{2}+x, x^{2}+1, x^{2}, x+1, x, 1, 0\}$
+\end{center}
+
+\section{Polinômios irredutíveis}
+
+Um polinômio é dito irredutível se não puder ser fatorado em polinômios
+não-triviais em um mesmo grupo. A irredutibilidade de um polinômio depende do
+grupo no qual está sendo trabalhado, portanto.
+
+No corpo finito $\mathbb{F}_{2^{3}}$, o polinômio $x^{2}+x+1$ é irredutível,
+mas $x^{2}+1$ não é, pois $(x+1)(x+1) = x^{2}+2x+1 \equiv x^{2}+1 \pmod{2}$.
+
+\subsection{Aritmética em corpos finitos}
+
+Para se realizar aritmética em corpos finitos, se realiza a operação entre os
+termos de mesmo grau, depois dividindo por um polinômio irredutível que define
+o corpo. Por exemplo:
+
+\begin{center}
+    $p = x^{3}+x+1$ \\
+    $q = x^{3}+x^{2}$ \\
+    $p+q = 2x^{3}+x^{2}+x+1$
+\end{center}
+
+No entanto, para corpos binários, a operação de adição convenientemente é
+equivalente a operação de ou-exclusivo sobre os bits do polinômio. Pelo mesmo
+exemplo, convertendo os termos dos polinômios para $0$ ou $1$ no corpo
+$\mathbb{F}_{2^{3}}$.
+
+\begin{center}
+    $p = {1011}_2$ \\
+    $q = {1100}_2$ \\
+    $p+q = p \oplus q \equiv {0111}_2 \pmod{1011} = x^{2}+x+1 \pmod{x^{3}-x-1}$
+\end{center}
+
+A operação de multiplicação em um corpo finito é a multiplicação módulo um
+polinômio irredutível que define o corpo, o que também pode ser feito se
+convertendo os termos para uma representação binária, o que facilita o uso por
+computadores:
+
+\begin{center}
+    $p*q = x^{6}+x^{5}+x^{4}+2x^{3}+x^{2} = {1110100}_2$ \\
+    $p*q = {1110100}_2 \equiv {110}_2 \pmod{1011} = x^{2}+x \pmod{x^{3}-x-1}$
+\end{center}
+
+\section{Encontrando $x$}
+
+\begin{enumerate}[label=\textbf{\alph*})]
+    \setlength\itemsep{1em}
+
+    \item
+        $9x \equiv 8 \pmod{7}$ \\
+        $= 9x \equiv 1 \pmod{7}$ \\
+        $x = 4+7n$
+
+    \item
+        $x \equiv 5 \pmod{3}$ \\
+        $= x \equiv 2 \pmod{3}$ \\
+        $x = 2+3n$
+
+    \item
+        $x \equiv 5 \pmod{-3}$ \\
+        $= x \equiv -1 \pmod{-3}$ \\
+        $x = -1-3n$
+
+    \item
+        $x \equiv -5 \pmod{3}$ \\
+        $= x \equiv 1 \pmod{3}$ \\
+        $x = 1+3n$
+
+    \item
+        $x \equiv -5 \pmod{-3}$ \\
+        $= x \equiv -2 \pmod{-3}$ \\
+        $x = -2-3n$
+
+    \item
+        $x \equiv 1234^{-1} \pmod{4321}$
+        $x \times 1234 = 1 \pmod{4321}$
+
+    \item
+        $x \equiv -24140 \pmod{40902}$
+        $= x \equiv 16762 \pmod{40902}$
+        $x = 16762+40902n$
+\end{enumerate}
+
+\section{Inversas multiplicativas do conjunto $\mathbb{Z}_{11}$}
+
+O conjunto $Z_{n}$ é o conjunto dos números relativamente primos a $n$. Como
+$11$ é um número primo, todos os números inferiores a ele são relativamente
+primos, portanto o conjunto compreende ${1, 2, \ldots, 10}$. As inversas
+multiplicativas podem ser encontradas se multiplicando os números deste
+conjunto de forma a encontrar $ab = 1 \pmod{11}$, sendo $a$ a inversa
+multiplicativa de $b$ e vice-versa.
+
+\begin{center}
+    $\begin{array}{ c | c c c c c c c c c c }
+        *  & 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & 9 & 10 \\ \hline
+        1  & 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & 9 & 10 \\
+        2  & 2 & 4 & 6 & 8 & 10 & 1 & 3 & 5 & 7 & 9 \\
+        3  & 3 & 6 & 9 & 1 & 4 & 7 & 10 & 2 & 5 & 8 \\
+        4  & 4 & 8 & 1 & 5 & 9 & 2 & 6 & 10 & 3 & 7 \\
+        5  & 5 & 10 & 4 & 9 & 3 & 8 & 2 & 7 & 1 & 6 \\
+        6  & 6 & 1 & 7 & 2 & 8 & 3 & 9 & 4 & 10 & 5 \\
+        7  & 7 & 3 & 10 & 6 & 2 & 9 & 5 & 1 & 8 & 4 \\
+        8  & 8 & 5 & 2 & 10 & 7 & 4 & 1 & 9 & 6 & 3 \\
+        9  & 9 & 7 & 5 & 3 & 1 & 10 & 8 & 6 & 4 & 2 \\
+        10 & 10 & 9 & 8 & 7 & 6 & 5 & 4 & 3 & 2 & 1 \\
+    \end{array}$
+\end{center}
+
+É possível concluir, portando, que os pares de inversas multiplicativas de
+$\mathbb{Z}_{11}$ são $(1, 1)$, $(2, 6)$, $(3, 4)$, $(5, 9)$ e $(10, 10)$.
+
+%\bibliographystyle{sbc/sbc}
+%\bibliography{gf}
+
+\end{document}

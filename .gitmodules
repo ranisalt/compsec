@@ -10,3 +10,6 @@
 [submodule "rsa/sbc"]
 	path = rsa/sbc
 	url = https://github.com/royertiago/sbc.git
+[submodule "gf/sbc"]
+	path = gf/sbc
+	url = https://github.com/royertiago/sbc.git
