@@ -1,0 +1,12 @@
+[submodule "lcg/sbc"]
+	path = lcg/sbc
+	url = https://github.com/royertiago/sbc.git
+[submodule "prm/sbc"]
+	path = prm/sbc
+	url = https://github.com/royertiago/sbc.git
+[submodule "dhke/sbc"]
+	path = dhke/sbc
+	url = https://github.com/royertiago/sbc.git
+[submodule "rsa/sbc"]
+	path = rsa/sbc
+	url = https://github.com/royertiago/sbc.git
