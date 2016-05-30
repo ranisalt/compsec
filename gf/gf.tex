@@ -1,6 +1,6 @@
 \documentclass[12pt]{article}
 \usepackage{sbc/template}
-\usepackage{amsmath,amssymb,color,enumitem,graphicx,listings,url}
+\usepackage{amsmath,amssymb,color,enumitem,url}
 \usepackage[brazil]{babel}
 \usepackage[utf8]{inputenc}
 
@@ -8,17 +8,6 @@
 \definecolor{codegray}{rgb}{0.5,0.5,0.5}
 \definecolor{codepurple}{rgb}{0.58,0,0.82}
 \definecolor{backcolour}{rgb}{0.95,0.95,0.92}
-
-\lstdefinestyle{mystyle}{
-    commentstyle=\color{codegreen},
-    keywordstyle=\color{blue},
-    numberstyle=\tiny\color{codegray},
-    stringstyle=\color{codepurple},
-    basicstyle=\footnotesize\ttfamily,
-    breaklines=true,
-    numbers=left
-}
-\lstset{style=mystyle}
 
 \sloppy
 
@@ -110,7 +99,7 @@ relativamente primos, $a\alpha \equiv 1 \pmod{b}$ e $b\beta \equiv 1 \pmod{a}$.
 
 Um grupo $G$ é um conjunto, finito ou infinito, de elementos acompanhado de uma
 operação binária $*$ (chamada de operação do grupo) que satisfazem as seguintes
-propriedades fundamentais:
+propriedades fundamentais~\cite{weisstein:1999:group}:
 
 \begin{description}
     \setlength\itemsep{1em}
@@ -144,7 +133,7 @@ Um exemplo de grupo pode ser o conjunto ${0, 1}$ sob a operação lógica $\land
 
 Mais restritivo que um grupo, um anel é um conjunto $G$ acompanhado de duas
 operações $+$ e $*$ (interpretados como adição e multiplicação) que satisfazem
-as seguintes propriedades fundamentais:
+as seguintes propriedades fundamentais~\cite{weisstein:1999:ring}:
 
 \begin{description}
     \setlength\itemsep{1em}
@@ -205,10 +194,10 @@ Um corpo é um conjunto $G$, satisfazendo todas as condições de um anel e
 adicionalmente todo elemento $a \in G$ diferente de zero possui inversa
 multiplicativa. Essa característica é conhecida como álgebra de divisão, porque
 é a propriedade que permite que um certo conjunto possua uma operação de
-divisão.
+divisão~\cite{weisstein:1999:fieldaxioms}.
 
 Um corpo com uma quantidade finita de elementos é conhecido como um
-\textbf{corpo de Galois}. Os exemplos mais usados de corpos finitos são os
+\textbf{corpo de Galois}~\cite{weisstein:1999:finitefield}. Os exemplos mais usados de corpos finitos são os
 conjuntos de números relativamente primos a $n$, denotados $\mathbb{Z}_{n}$.
 
 \section{Corpos primos e binários}
@@ -222,7 +211,7 @@ isomórficos como iguais) corpo finito $\mathbb{F}_{p^{n}}$.
 Um corpo finito $\mathbb{F}_{p}$, onde $p$ é um número primo, é chamado de
 corpo primo de ordem $p$ e contém as classes de congruencia módulo $p$, sendo
 os $p$ elementos denominados $0, 1, \ldots, p-1$. $a = b$ em $\mathbb{F}_{p}$
-significa $a \equiv b \pmod{p}$.
+significa $a \equiv b \pmod{p}$~\cite{weisstein:1999:2}.
 
 O corpo finito $\mathbb{F}_{2}$ é um corpo primo que consiste dos elementos $0$
 e $1$ e satisfaz as seguintes operações:
@@ -275,7 +264,7 @@ o corpo. Por exemplo:
     $p+q = 2x^{3}+x^{2}+x+1$
 \end{center}
 
-No entanto, para corpos binários, a operação de adição convenientemente é
+io entanto, para corpos binários, a operação de adição convenientemente é
 equivalente a operação de ou-exclusivo sobre os bits do polinômio. Pelo mesmo
 exemplo, convertendo os termos dos polinômios para $0$ ou $1$ no corpo
 $\mathbb{F}_{2^{3}}$.
@@ -361,10 +350,97 @@ multiplicativa de $b$ e vice-versa.
     \end{array}$
 \end{center}
 
-É possível concluir, portando, que os pares de inversas multiplicativas de
+É possível concluir, portanto, que os pares de inversas multiplicativas de
 $\mathbb{Z}_{11}$ são $(1, 1)$, $(2, 6)$, $(3, 4)$, $(5, 9)$ e $(10, 10)$.
 
-%\bibliographystyle{sbc/sbc}
-%\bibliography{gf}
+\section{Aritmética polinomial em $\mathbb{Z}_{10}$}
+
+\begin{enumerate}[label=\textbf{\alph*})]
+    \setlength\itemsep{1em}
+
+    \item $(7x+2)-(x^{2}+5)$
+        $= -x^{2}+7x-3$
+        $= \boldsymbol{9x^{2}+7x+7}$
+
+    \item $(6x^{2}+x+3) \times (5x^{2}+2)$
+        $= 30x^{4}+5x^{3}+27x^{2}+2x+6$
+        $= \boldsymbol{5x^{3}+7x^{2}+2x+6}$
+\end{enumerate}
+
+\section{Polinômios em corpos finitos}
+
+\begin{enumerate}[label=\textbf{\alph*})]
+    \setlength\itemsep{1em}
+
+    \item $gcd(x^{3}+x+1, x^{2}+x+1)$ sobre GF($2$)
+
+        $x^{3}+x+1$ é irredutível em GF($2$), portanto o único divisor comum
+        com outros polinômios do mesmo grupo é \textbf{1}.
+
+    \item $gcd(x^{3}-x+1, x^{2}+1)$ sobre GF($3$)
+
+        $x^{2}+1$ é irredutível em GF($3$), portanto o único divisor comum
+        com outros polinômios do mesmo grupo é \textbf{1}.
+\end{enumerate}
+
+\section{Tabela aditiva e multiplicativa para GF($2^{4}$)}
+
+Para o polinômio irredutível $x^{4}+x+1$, as tabelas de adição e multiplicação
+do corpo finito GF($2^{4}$) são:
+
+\begin{center}
+    $\begin{array}{ c | c c c c c c c c c c c c c c c c }
+		+ & 0 & 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & 9 & A & B & C & D & E & F \\ \hline
+		0 & 0 & 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & 9 & A & B & C & D & E & F \\
+		1 & 1 & 0 & 3 & 2 & 5 & 4 & 7 & 6 & 9 & 8 & B & A & D & C & F & E \\
+		2 & 2 & 3 & 0 & 1 & 6 & 7 & 4 & 5 & A & B & 8 & 9 & E & F & C & D \\
+		3 & 3 & 2 & 1 & 0 & 7 & 6 & 5 & 4 & B & A & 9 & 8 & F & E & D & C \\
+		4 & 4 & 5 & 6 & 7 & 0 & 1 & 2 & 3 & C & D & E & F & 8 & 9 & A & B \\
+		5 & 5 & 4 & 7 & 6 & 1 & 0 & 3 & 2 & D & C & F & E & 9 & 8 & B & A \\
+		6 & 6 & 7 & 4 & 5 & 2 & 3 & 0 & 1 & E & F & C & D & A & B & 8 & 9 \\
+		7 & 7 & 6 & 5 & 4 & 3 & 2 & 1 & 0 & F & E & D & C & B & A & 9 & 8 \\
+		8 & 8 & 9 & A & B & C & D & E & F & 0 & 1 & 2 & 3 & 4 & 5 & 6 & 7 \\
+		9 & 9 & 8 & B & A & D & C & F & E & 1 & 0 & 3 & 2 & 5 & 4 & 7 & 6 \\
+		A & A & B & 8 & 9 & E & F & C & D & 2 & 3 & 0 & 1 & 6 & 7 & 4 & 5 \\
+		B & B & A & 9 & 8 & F & E & D & C & 3 & 2 & 1 & 0 & 7 & 6 & 5 & 4 \\
+		C & C & D & E & F & 8 & 9 & A & B & 4 & 5 & 6 & 7 & 0 & 1 & 2 & 3 \\
+		D & D & C & F & E & 9 & 8 & B & A & 5 & 4 & 7 & 6 & 1 & 0 & 3 & 2 \\
+		E & E & F & C & D & A & B & 8 & 9 & 6 & 7 & 4 & 5 & 2 & 3 & 0 & 1 \\
+		F & F & E & D & C & B & A & 9 & 8 & 7 & 6 & 5 & 4 & 3 & 2 & 1 & 0 \\
+	\end{array}$
+\end{center}
+
+\begin{center}
+    $\begin{array}{ c | c c c c c c c c c c c c c c c }
+        * & 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & 9 & A & B & C & D & E & F \\ \hline
+        1 & 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & 9 & A & B & C & D & E & F \\
+        2 & 2 & 4 & 6 & 8 & A & C & E & 3 & 1 & 7 & 5 & B & 9 & F & D \\
+        3 & 3 & 6 & 5 & C & F & A & 9 & B & 8 & D & E & 7 & 4 & 1 & 2 \\
+        4 & 4 & 8 & C & 3 & 7 & B & F & 6 & 2 & E & A & 5 & 1 & D & 9 \\
+        5 & 5 & A & F & 7 & 2 & D & 8 & E & B & 4 & 1 & 9 & C & 3 & 6 \\
+        6 & 6 & C & A & B & D & 7 & 1 & 5 & 3 & 9 & F & E & 8 & 2 & 4 \\
+        7 & 7 & E & 9 & F & 8 & 1 & 6 & D & A & 3 & 4 & 2 & 5 & C & B \\
+        8 & 8 & 3 & B & 6 & E & 5 & D & C & 4 & F & 7 & A & 2 & 9 & 1 \\
+        9 & 9 & 1 & 8 & 2 & B & 3 & A & 4 & D & 5 & C & 6 & F & 7 & E \\
+        A & A & 7 & D & E & 4 & 9 & 3 & F & 5 & 8 & 2 & 1 & B & 6 & C \\
+        B & B & 5 & E & A & 1 & F & 4 & 7 & C & 2 & 9 & D & 6 & 8 & 3 \\
+        C & C & B & 7 & 5 & 9 & E & 2 & A & 6 & 1 & D & F & 3 & 4 & 8 \\
+        D & D & 9 & 4 & 1 & C & 8 & 5 & 2 & F & B & 6 & 3 & E & A & 7 \\
+        E & E & F & 1 & D & 3 & 2 & C & 9 & 7 & 6 & 8 & 4 & A & B & 5 \\
+        F & F & D & 2 & 9 & 6 & 4 & B & 1 & E & C & 3 & 8 & 7 & 5 & A \\
+	\end{array}$
+\end{center}
+
+Utilizando os números como representação dos polinômios como explicado em
+seções anteriores.
+
+\section{Inverso multiplicativo em GF($2^{4}$)}
+
+Para o polinômio irredutível $x^{4}+x+1$, utilizando as tabelas acima, se
+encontra que o inverso multiplicativo de $x^{3}+x+1$, que pode ser representado
+como $1011_{2}$ ou $B_{16}$, é $x^{2}+1$ ($101_{2}$ ou $5_{16}$).
+
+\bibliographystyle{sbc/sbc}
+\bibliography{gf}
 
 \end{document}
