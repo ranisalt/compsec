@@ -13,3 +13,6 @@
 [submodule "gf/sbc"]
 	path = gf/sbc
 	url = https://github.com/royertiago/sbc.git
+[submodule "final/sbc"]
+	path = final/sbc
+	url = https://github.com/royertiago/sbc.git

@@ -1,0 +1,185 @@
+\documentclass[12pt]{article}
+\usepackage{sbc/template}
+\usepackage{amsmath,array,booktabs,color,graphicx,listings,url}
+\usepackage[brazil]{babel}
+\usepackage[utf8]{inputenc}
+
+\sloppy
+
+\title{Função de Hash Criptográfica SHA-3}
+
+\author{Ranieri Althoff}
+
+\address{Universidade Federal de Santa Catarina\\
+Departamento de Informática e Estatística\\
+Segurança em Computação}
+
+\begin{document}
+
+\maketitle
+
+\section{Introdução}\label{sec:firstpage}
+
+Uma função \textit{hash} é uma função que aceita um bloco de dados de tamanho
+variável como entrada e produz um valor de tamanho fixo como saída, chamado de
+valor de \textit{hash}. Esta função tem a forma:
+\begin{center}
+    $h = H(M)$
+\end{center}
+
+Onde:
+\begin{itemize}
+	\item h é o valor hash de tamanho fixo gerado pela função hash.
+	\item H é função hash que gerou o valor h.
+	\item M é o valor de entrada de tamanho variável.
+\end{itemize}
+
+Espera-se que uma função \textit{hash} produza valores $h$ que são
+uniformemente distribuídos no contra-domínio e que são aparentemente
+aleatórios, ou seja, a mudança de apenas um \textit{bit} em $M$ causará uma
+mudança do valor $h$. Por esta característica, as funções \textit{hash} são
+muito utilizadas para verificar se um determinado bloco de dados foi
+indevidamente alterado.
+
+As funções \textit{hash} apropriadas para o uso em segurança de computadores
+são chamadas de ``função \textit{hash} criptográfica''. Este tipo de função
+\textit{hash} é implementada por um algoritmo que torna inviável
+computacionalmente encontrar:
+\begin{itemize}
+    \item um valor $M$ dado um determinado valor $h$:
+        $M | H(M) = h$
+    \item dois valores $M_1$ e $M_2$ que resultem no mesmo valor:
+        $(M_1, M_2) | H(M_1) = H(M_2)$
+\end{itemize}
+
+Os principais casos de uso de funções \textit{hash} criptográficas são:
+\begin{itemize}
+    \item Autenticação de Mensagens: é um serviço de segurança onde é possível
+        verificar que uma mensagem não foi alterada durante sua transmissão e
+        que é proveniente do devido remetente.
+    \item Assinatura Digital: é um serviço de segurança que permite a uma
+        entidade assinar digitalmente um documento ou mensagem.
+    \item Arquivo de Senhas de Uma Via: é uma forma de armazenar senhas usando
+        o valor \textit{hash} da senha, permitindo sua posterior verificação
+        sem a necessidade de armazenar a senha em claro, cifrá-la ou
+        decifrá-la.
+    \item Detecção de Perpetração ou Infeção de Sistemas: é um serviço de
+        segurança em que é possível determinar se arquivos de um sistema foram
+        alterados por terceiros sem a autorização dos usuários do sistema.
+\end{itemize}
+
+\subsection{Propriedades}
+
+Como observado na seção anterior, uma função \textit{hash} criptográfica
+precisa ter certas propriedades para permitir seu uso em segurança de
+computadores. Nas seções a seguir estão destacadas algumas dessas propriedades.
+
+Antes, define-se dois termos usados a seguir:
+\begin{itemize}
+    \item Pré-Imagem: um valor $M$ do domínio de uma função \textit{hash} dada
+        pela fórmula $h = H(M)$ é denominado de “pré-imagem” do valor $h$.
+    \item Colisão: para cada valor $h$ de tamanho $n$ \textit{bits} existe
+        necessariamente mais de uma pré-imagem correspondente de tamanho $m$
+        \textit{bits} se $m > n$, ou seja, existe uma ``colisão''.
+\end{itemize}
+
+O número de pré-imagens de $m$ \textit{bits} para cada valor $h$ de $n$
+\textit{bits} é calculado pela formula $2^{m/n}$. Se permitimos um tamanho em
+\textit{bits} arbitrariamente longo para as pré-imagens, isto aumentará ainda
+mais a probabilidade de colisão durante o uso de uma função \textit{hash}.
+Entretanto, os riscos de segurança são minimizados se a função de \textit{hash}
+criptográfica oferecer as propriedades descritas nas próximas seções.
+
+\subsubsection{Resistente a Pré-Imagem}
+
+Uma função \textit{hash} criptográfica é resistente a pré-imagem quando esta é
+uma função de uma via. Ou seja, embora seja computacionalmente fácil gerar um
+valor $h$ a partir de uma pré-imagem $M$ usando a função de \textit{hash}, é
+computacionalmente inviável gerar uma pré-imagem a partir do valor $h$.
+
+Se uma função \textit{hash} não for resistente à pré-imagem, é possível atacar
+uma mensagem autenticada $M_1$ para descobrir o valor secreto $S$ usado na
+mensagem, permitindo assim ao perpetrante enviar uma outra mensagem $M_2$ ao
+destinatário no lugar do remetente sem que o destinatário perceba a violação da
+comunicação. O ataque ocorre da seguinte forma:
+\begin{itemize}
+    \item O perpetrante tem conhecimento do algoritmo de \textit{hash} usado na
+        comunicação entre as partes.
+    \item Ao escutar a comunicação, o perpetrante descobre qual é a mensagem
+        $M$ e o valor de \textit{hash} $h$.
+    \item Visto que a inversão da função de \textit{hash} é computacionalmente
+        fácil, o perpetrante calcula $H^{-1}(h)$.
+    \item Como $H^{-1}(h) = S || M$, o perpetrante descobre $S$.
+\end{itemize}
+
+Desta forma, o perpetrante pode utilizar a chave secreta $S$ no envio de uma
+mensagem $M_2$ para o destinatário sem que este perceba a violação.
+
+\subsubsection{Resistente a Segunda Pré-Imagem}
+
+Uma função \textit{hash} criptográfica é resistente a segunda pré-imagem
+quando esta função torna inviável computacionalmente encontrar uma pré-imagem
+alternativa que gera o mesmo valor \textit{h} da primeira pré-imagem.
+
+Se uma função de \textit{hash} não for resistente a segunda pré-imagem, um
+perpetrante conseguirá substituir uma mensagem que utiliza um determinado valor
+de \textit{hash}, mesmo que a função de \textit{hash} seja de uma via, ou seja,
+resistente a pré-imagem.
+
+\subsubsection{Resistente a Colisão}
+
+Uma função \textit{hash} criptográfica é resistente a colisão quando esta
+tornar inviável computacionalmente encontrar duas pré-imagens quaisquer que
+possuam o mesmo valor de \textit{hash}. Neste caso, diferentemente da
+resistência a segunda pré-imagem, não é dado uma pré-imagem inicial para a qual
+precisa se achar uma segunda pré-imagem, mas é suficiente encontrar duas
+pré-imagens quaisquer tal que $H(M_1) = H(M_2)$.
+
+Quando uma função \textit{hash} é resistente a colisão, está é consequente
+resistente a segunda pré-imagem. Porém, nem sem sempre uma função resistente a
+segunda pré-imagem será resistente a colisão. Por isto, diz-se que uma função
+\textit{hash} resistente a colisão é uma função de \textit{hash} forte.
+
+Se uma função \textit{hash} não for resistente a colisão, então é possível para
+uma parte forjar a assinatura de outra parte. Por exemplo, se Alice deseja que
+Bob assine um documento dizendo que deve 100 reais a ela, caso Alice saiba que
+um documento contendo o valor de 1000 reais contém o mesmo valor de
+\textit{hash} que o documento original, Alice pode fazer com que Bob seja
+responsável por uma dívida maior que a original, pois a assinatura valerá para
+ambos os documentos.
+
+\subsubsection{Uso das Propriedades de Funções \textit{Hash}}
+
+Abaixo, temos uma tabela que mostra quais propriedades das funções
+\textit{hash} são necessárias para alguma das aplicações de segurança de
+computadores:
+
+\begin{center}
+    \renewcommand{\arraystretch}{1.2}
+    \newcolumntype{M}[1]{>{\centering\arraybackslash}m{#1}}
+    \begin{tabular}{ M{3.6cm} | M{2.4cm} | M{3.6cm} | M{2.4cm} }
+        Aplicação & Resistente a Pré-Imagem & Resistente a Segunda Pré-Imagem & Resistente a Colisão \\ \midrule
+        Autenticação de Mensagens & X & X & X \\ \midrule
+        Assinatura Digital & X & X & X \\ \midrule
+        Infecção de Sistemas & & X & \\ \midrule
+        Arquivo de Senhas de Uma Via & X & & \\
+    \end{tabular}
+\end{center}
+
+No caso da infecção de sistemas, não há problema em usar uma função de
+\textit{hash} com fácil inversão, pois não é necessário embutir um valor
+secreto na geração do valor de \textit{hash} de um arquivo. Já, num arquivo de
+\textit{hash} de senhas, a inversão permitiria descobrir a senha a partir do
+valor de \textit{hash}.
+
+Se a função de \textit{hash}, porém, permitir o descobrimento de uma segunda
+pré-imagem, seria possível infectar um arquivo de um sistema sem detecção, pois
+seu valor de \textit{hash} não mudaria. Isto não seria um problema para um
+arquivo de \textit{hash} de senhas, pois o perpetrante não possui a senha, que
+é a primeira pré-imagem e, portanto, não teria condições de descobrir a segunda
+pré-imagem.
+
+%\bibliographystyle{sbc/sbc}
+%\bibliography{sha-3}
+
+\end{document}
