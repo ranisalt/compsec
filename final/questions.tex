@@ -55,42 +55,278 @@ coluna e linha, ou seja, os primeiros 64 \textit{bits} serão mapeados na pista
 da coluna 0 e linha 0, os próximos serão mapeados na pista da coluna 1 e linha
 0, e assim sucessivamente.
 
+É esta característica que gera o tamanho $b$ da string $S$, porque para cada
+pista de $w$ \textit{bits}, existem $5 \cdot 5 = 25$ células pelo formato da
+matriz, portanto $b = 25 \cdot w$.
+
 \subsection{Como é feita a conversão de \textit{state array} para
     \textit{strings}?}
 
 A conversão inversa, ou seja, de \textit{state array} para \textit{string}, é
-feita de forma análoga, concatenando todas as pistas por coluna e então por
-linha. Em passos, primeiro se concatenam os \textit{bits} de uma pista:
+feita de forma análoga, concatenando todas as pistas por coluna (gerando os
+planos) e então por linha. Utilizando-se da mesma fórmula posicional,
 
-$Lane(i, j) = A[i, j, 0] \cdot A[i, j, 1] \cdot \ldots \cdot A[i, j, w-1]$
+\begin{center}
+    $S[w \cdot (5y+x) + z] = A[x, y, z]$ \\
+    ou \\
+    $S[i] = A[\floor*{i \div (5w)}, \floor*{i \div w \pmod{w}}, i \pmod{w}]$
+\end{center}
 
-Por exemplo, para a linha 0 e coluna 0, e usando $w = 64$:
+Primeiro se concatenam os $w$ \textit{bits} de uma pista:
 
-$Lane(0, 0) = A[0, 0, 0] \cdot A[0, 0, 1] \cdot \ldots \cdot A[0, 0, 63]$
+$Lane(i, j) = A[i, j, 0] \concat A[i, j, 1] \concat \cdots \concat A[i, j, w-1]$
 
-$Lane(1, 0) = A[1, 0, 0] \cdot A[1, 0, 1] \cdot \ldots \cdot A[1, 0, 63]$
+Onde $\concat$ denota concatenação de \textit{strings}, de forma que as pistas
+da coluna $i = 0$, usando $w = 64$, sejam:
 
-E assim sucessivamente para todas as pistas. Cada plano é a concatenação de
-todas as pistas na sua coluna, indexadas por $0 \leq j < 5$:
+$\begin{array}{c}
+    Lane(0, 0) = A[0, 0, 0] \concat A[0, 0, 1] \concat \cdots \concat A[0, 0, 63] \\
+    Lane(1, 0) = A[1, 0, 0] \concat A[1, 0, 1] \concat \cdots \concat A[1, 0, 63] \\
+    \vdots \\
+    Lane(5, 0) = A[5, 0, 0] \concat A[5, 0, 1] \concat \cdots \concat A[5, 0, 63]
+\end{array}$
 
-$Plane(j) = Lane(0, j) \cdot Lane(1, j) \cdot \ldots \cdot Lane(4, j)$
+E assim para todas as pistas. A \textit{string} que representa cada plano é a
+concatenação de todas as pistas na sua coluna $j$:
+
+$Plane(j) = Lane(0, j) \concat Lane(1, j) \concat \cdots \concat Lane(4, j)$
+
+De forma que os planos de cada uma das colunas $0 \leq j < 5$ seja:
+
+$\begin{array}{c}
+    Plane(0) = Lane(0, 0) \concat Lane(1, 0) \concat \cdots \concat Lane(4, 0) \\
+    Plane(1) = Lane(0, 1) \concat Lane(1, 1) \concat \cdots \concat Lane(4, 1) \\
+    \vdots \\
+    Plane(4) = Lane(0, 4) \concat Lane(1, 4) \concat \cdots \concat Lane(4, 4)
+\end{array}$
+
+A concatenação destes planos, então, gera a \textit{string} a partir do estado:
+
+$S = Plane(0) \concat Plane(1) \concat \cdots \concat Plane(4)$
+
+No resultado final, a concatenação de todos os \textit{bits} gera a seguinte
+\textit{string}:
+
+$S = A[0, 0, 0] \concat \cdots \concat A[0, 0, 63] \concat A[0, 1, 0] \concat \cdots \concat A[0, 4, 63] \concat A[1, 0, 0] \concat \cdots \concat A[4, 4, 63]$
 
 \subsection{Explicar os cinco passos de mapeamento (\textit{step mappings})}
 
-\subsection{Explicar a permutação Keccak-p[b,nr].}
+Cada rodada do SHA-3 é composta por cinco passos de mapeamento do \Keccak-$p$,
+representados pelas funções $\iota$, $\chi$, $\pi$, $\rho$ e $\theta$, que
+recebem como parâmetros posições de \textit{bits}, colunas e linhas e manipulam
+o \textit{state array} da operação.
+
+\subsubsection{Função \textit{theta} $\theta$}
+
+A função \textit{theta} é definida pela seguinte fórmula:
+
+$\theta(M[x, y, z]) = M[x, y, z] \oplus \sum\limits_{y'=0}^{4}M[x-1, y', z] \oplus \sum\limits_{y'=0}^{4}M[x+1, y', z-1]$
+
+É uma função de substituição que utiliza os \textit{bits} de colunas adjacentes
+e da mesma pista na qual está sendo aplicada. Para cada pista $A[x, y]$, cada
+um dos $w$ \textit{bits} $z$ é logicamente somado com um somatório de uma
+coluna da linha anterior e com um somatório de uma coluna da linha posterior,
+como mostrado na figura~\ref{fig:theta}.
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics{images/theta.png}
+    \caption{Visualização da função theta.}
+    \label{fig:theta}
+\end{figure}
+
+Dessa forma, cada um dos \textit{bits} do \textit{state array} é afetado por
+11 \textit{bits} do estado anterior, sendo 5 de cada coluna utilizada e o
+próprio \textit{bit} em que a função foi aplicada. Isso cria um alto grau de
+difusão dos efeitos de todas as funções no resultado.
+
+A função \textit{theta} é a primeira porque mistura a parte interna do estado
+(invisível para um atacante) com a parte externa, muito por causa do
+funcionamento das funções esponja, portanto um atacante não pode acessar a
+entrada das funções subsequentes apenas analisando a parte visível do estado.
+
+\subsubsection{Função \textit{rho} $\rho$}
+
+A função \textit{rho} é definida pela seguinte fórmula:
+
+$\rho(M[x, y, z]) = \begin{cases}
+    M[x, y, z], \mbox{se } x=y=0 \\
+    M[x, y, z - \frac{(t+1)(t+2)}{2}] \mid 0 \leq t < 24 \land
+    \begin{pmatrix}0 & 1 \\ 2 & 3\end{pmatrix}
+    \begin{pmatrix}0 \\ 1\end{pmatrix} =
+    \begin{pmatrix}x \\ y\end{pmatrix}
+    \mbox{ em } GF(5)
+\end{cases}$
+
+É uma função de permutação que utiliza os \textit{bits} de uma pista $A[x, y]$.
+No caso de $(x, y) = (0, 0)$, a função não altera os \textit{bits}, mas para
+os outros casos, ela aplica um deslocamento circular dos \textit{bits} como um
+embaralhamento dos mesmos, usando o valor $t$ para definir quantos bits será
+deslocado, como mostrado na figura~\ref{fig:rho}.
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics{images/rho.png}
+    \caption{Visualização da função rho.}
+    \label{fig:rho}
+\end{figure}
+
+Essa transformação gera a difusão entre os \textit{bits} de uma mesma pista,
+acelerando os efeitos das funções em \textit{bits} próximos da \textit{string}
+de entrada e do \textit{state array}, já que as outras funções criam difusão
+entre linhas, colunas e pistas, mas não entre \textit{bits}.
+
+\subsubsection{Função \textit{pi} $\pi$}
+
+A função \textit{pi} é definida pela seguinte fórmula:
+
+$\pi(M[x, y]) = M[x', y'] \mbox{ onde }
+\begin{pmatrix}x' \\ y'\end{pmatrix} =
+\begin{pmatrix}x \\ y\end{pmatrix}
+\begin{pmatrix}0 & 1 \\ 2 & 3\end{pmatrix}$
+
+É uma função de permutação que utiliza as pistas. Assim como \textit{theta},
+\textit{pi} faz um deslocamento circular usando uma fórmula semelhante, como
+mostrado na figura~\ref{fig:pi}.
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.7\textwidth]{images/pi.png}
+    \caption{Visualização da função pi.}
+    \label{fig:pi}
+\end{figure}
+
+Essa transformação gera a difusão entre diferentes pistas.
+
+\subsubsection{Função \textit{chi} $\chi$}
+
+A função \textit{chi} é definida pela seguinte fórmula:
+
+$\chi(M[x, y, z]) = M[x, y, z] \oplus (\neg{M}[x+1, y, z] \land M[x+2, y, z])$
+
+É uma função de substituição que utiliza os \textit{bits} posteriores ao
+\textit{bit} sendo aplicado, sendo o passo não-linear que torna a função
+\Keccak uma função irreversível, ou seja, impede a obtenção da pré-imagem a
+partir do \textit{hash}. O passo \textit{chi} é mais facilmente visualizado se
+usando um circuito digital, como mostrado na figura~\ref{fig:chi}.
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics{images/chi.png}
+    \caption{Visualização da função chi.}
+    \label{fig:chi}
+\end{figure}
+
+Sua definição possui propriedades algébricas que garantem que a saída não
+possui correlação direta com a entrada em termos de paridade, ou seja, não é
+possível concluir nada sobre a entrada analisando a quantidade de \textit{bits}
+em 0 ou 1 da saída.
+
+\subsubsection{Função \textit{iota} $\iota$}
+
+A função \textit{iota} é definida pela seguinte fórmula:
+
+$\iota(M[x, y]) = M[x, y] \oplus RC_{i}$
+
+É uma função de substituição baseada em um valor tabelado e diferente para cada
+rodada do SHA-3, e é gerado a partir de uma fórmula que utiliza um gerador de
+deslocamento linear realimentado (LFSR, na sigla em inglês) em $GF(2)$:
+
+$RC_{i}[2^{j}-1] = (x^{j+7i} \pmod{x^8 + x^6 + x^5 + x^4 + 1}) \pmod{x} \mbox{ para } 0 \leq j \leq \log w$
+
+Dessa forma, não existe relação de simetria entre as diferentes rodadas, porque
+sem este passo, todas as rodadas teriam a mesma fórmula e poderiam ser
+simplificadas para permitir ataques.
+
+A função \textit{iota} é somente aplicada na primeira linha e coluna, ou seja,
+os parâmetros $x$ e $y$ são sempre 0, e seu efeito é difundido para as outras
+linhas e colunas através dos passos \textit{theta} e \textit{chi}.
+
+\subsection{Explicar a permutação \Keccak-$p[b,n_r]$}
+
+Uma função \Keccak-$p[b, n_r]$ é uma generalização das funções de substituição
+e permutação \Keccak que podem ser usadas pelo SHA-3 e recebe como parâmetros o
+comprimento da \textit{string} $S$, que define o tamanho do
+\textit{state array}, e o número de rodadas na fase de absorção.
+
+Cada uma das rodadas $R_{i}$ de \Keccak-$p$ consiste na aplicação dos cinco
+passos de transformação, vistos na seção anterior:
+
+\begin{center}
+    $R_{i} = \iota \circ \chi \circ \pi \circ \rho \circ \theta$
+\end{center}
+
+O \textit{state array} na rodada $i$, denominado $S_{i}$, é encontrado pela
+seguinte composição de funções:
+
+\begin{center}
+    $S_{i} = \iota(\chi(\pi(\rho(\theta(S_{i-1}))), i)$
+\end{center}
+
+Onde $j \geq 2l + 12 - n_r$, sendo $l = \log w$, e $i < 2l + 12$. Essa
+definição genérica nos permite gerar versões do \Keccak para diferentes
+tamanhos de palavras $w$, desde que $w = 2^{k}$. É conveniente utilizar $32$ ou
+$64$ por ser o tamanho de uma palavra em processadores modernos, e o FIPS 202
+define os seguintes parâmetros por padrão:
+
+$\begin{array}{l}
+    b \in \{25, 50, 100, 200, 400, 800, 1600\} \\
+    n_{r} = 2l + 12, \mbox{ onde } l \in \mathbb{Z}
+\end{array}$
 
 \subsection{Descrever o \textit{framework} \textit{sponge construction}}
 
-\subsection{Explique a família de funções esponja Keccak}
+Funções esponja são uma classe de funções que recebem uma entrada de tamanho
+finito qualquer e produzem uma saída com outro tamanho qualquer desejado, sendo
+definidas por três parâmetros: um estado $S$, que contém $b$ bits; uma função
+$f$ que permuta ou transforma o estado $S$; e uma função de \textit{padding}
+$P$~\cite{noekeon:2011}.
+
+Na inicialização, a função $P$ é aplicada na entrada $M$ e dividida em blocos
+de $r$ bits. Os $b$ bits do estado $S$ são zerados. A construção da esponja se
+dá em duas fases, chamadas de absorção e compressão.
+
+O tamanho $r$ também é chamado de \textit{bitrate}, porque representa a
+quantidade de bits da entrada que são consumidos em cada iteração da função
+esponja, e o tamanho $c = |S| - r$ é chamado de capacidade, e representa o
+nível de segurança atingido pela variante da função - SHA-3, $r + c = b$.
+
+Na fase de absorção, cada bloco $P$ de $r$ bits é combinado com os primeiros
+$r$ bits, com os restantes $c$ bits preenchidos com zero, do estado $S$ com
+\texttt{xor} e é aplicada a função $f$ no resultado, ou seja,
+$S_{i} = f(S_{i-1} \oplus P_{i} \concat 0^{c})$. Ao final de todas as
+iterações, ou seja, após a mensagem $M$ ser completamente consumida pela
+absorção da esponja, a saída da função $f$ será o \textit{hash} gerado. Na fase
+de compressão, os primeiros $r$ bits do estado $S$ são retornados, e caso mais
+bits sejam desejados, se aplica novamente a função $f$ em $S$ para transformar
+o estado.
+
+\subsection{Explique a família de funções esponja \Keccak}
 
 \subsection{Explique a especificação da função SHA-3}
 
+A definição do SHA-3 publicada pelo NIST prevê dois tipos de função baseadas no
+\Keccak, funções de \textit{hash} criptográficas e funções de saída extendida
+(XOF), também chamadas de SHAKE.
+
 \begin{enumerate}[label=\roman*.]
+    \setlength\itemsep{1em}
+
     \item Funções de \textit{hash} SHA-3
+
+        As funções de \textit{hash} podem ser definidas genericamente para um
+        tamanho do \textit{hash} gerado $d$ e mensagem $M$ com a seguinte
+        fórmula:
+
+        $SHA-3(d, M) =$ \Keccak-$p[2d](M \concat 01, d)$ \newline
+
+        Observando que os bits $01$ são concatenados à mensagem $M$ antes da
+        execução a função. O NIST definiu os tamanhos
+        $d \in \{224, 256, 384, 512\}$ para o SHA-3, existindo portanto
+        SHA3-224, SHA3-256, SHA3-384 e SHA3-512.
+
     \item Funções de saída extendida
 \end{enumerate}
-
-\subsection{Explique a construção da esponja}
 
 \subsection{Apresente a análise de segurança}
 
