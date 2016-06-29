@@ -5,7 +5,7 @@
 
 \subsection{O que é e para que serve o \textit{state array}?}
 
-O \textit{state array} do \Keccak é uma representação do estado do algoritmo e
+O \textit{state array} do \Keccak{} é uma representação do estado do algoritmo e
 uma matriz de três dimensões, de tamanho $5 \times 5 \times w$, onde $w$ é o
 comprimento do bloco a ser cifrado. Na maioria das linguagens de programação,
 é uma estrutura muito simples de ser representada, mas tem um uso bastante
@@ -206,7 +206,7 @@ $\chi(M[x, y, z]) = M[x, y, z] \oplus (\neg{M}[x+1, y, z] \land M[x+2, y, z])$
 
 É uma função de substituição que utiliza os \textit{bits} posteriores ao
 \textit{bit} sendo aplicado, sendo o passo não-linear que torna a função
-\Keccak uma função irreversível, ou seja, impede a obtenção da pré-imagem a
+\Keccak{} uma função irreversível, ou seja, impede a obtenção da pré-imagem a
 partir do \textit{hash}. O passo \textit{chi} é mais facilmente visualizado se
 usando um circuito digital, como mostrado na figura~\ref{fig:chi}.
 
@@ -245,7 +245,7 @@ linhas e colunas através dos passos \textit{theta} e \textit{chi}.
 \subsection{Explicar a permutação \Keccak-$p[b,n_r]$}
 
 Uma função \Keccak-$p[b, n_r]$ é uma generalização das funções de substituição
-e permutação \Keccak que podem ser usadas pelo SHA-3 e recebe como parâmetros o
+e permutação \Keccak{} que podem ser usadas pelo SHA-3 e recebe como parâmetros o
 comprimento da \textit{string} $S$, que define o tamanho do
 \textit{state array}, e o número de rodadas na fase de absorção.
 
@@ -264,7 +264,7 @@ seguinte composição de funções:
 \end{center}
 
 Onde $j \geq 2l + 12 - n_r$, sendo $l = \log w$, e $i < 2l + 12$. Essa
-definição genérica nos permite gerar versões do \Keccak para diferentes
+definição genérica nos permite gerar versões do \Keccak{} para diferentes
 tamanhos de palavras $w$, desde que $w = 2^{k}$. É conveniente utilizar $32$ ou
 $64$ por ser o tamanho de uma palavra em processadores modernos, e o FIPS 202
 define os seguintes parâmetros por padrão:
@@ -296,40 +296,124 @@ $r$ bits, com os restantes $c$ bits preenchidos com zero, do estado $S$ com
 \texttt{xor} e é aplicada a função $f$ no resultado, ou seja,
 $S_{i} = f(S_{i-1} \oplus P_{i} \concat 0^{c})$. Ao final de todas as
 iterações, ou seja, após a mensagem $M$ ser completamente consumida pela
-absorção da esponja, a saída da função $f$ será o \textit{hash} gerado. Na fase
-de compressão, os primeiros $r$ bits do estado $S$ são retornados, e caso mais
-bits sejam desejados, se aplica novamente a função $f$ em $S$ para transformar
-o estado.
+absorção da esponja, a saída da função $f$ será o \textit{hash} gerado.
+
+Na fase de compressão, os primeiros $r$ bits do estado $S$ são retornados, e
+caso mais bits sejam desejados, se aplica novamente a função $f$ em $S$ para
+transformar o estado.
 
 \subsection{Explique a família de funções esponja \Keccak}
+
+O algoritmo escolhido como SHA-3 é baseado na família de funções esponja
+\textbf{\Keccak}, mais especificamente na variante com 1600 bits de largura da
+função de permutação~\cite{fips:2015}.
+
+O \Keccak{} segue a a estrutura dos algoritmos de \textit{hash} comuns, onde os
+blocos $P$ da mensagem a ser cifrada vão sendo concatenados alternadamente com
+aplicações de uma função de transformação $f$, de forma que a passagem $i$
+tenha o seguinte formato:
+
+\begin{center}
+        $S_{i} = f(S_{i-1} \oplus P_{i})$
+\end{center}
+
+Para que a mensagem seja transformada pela função esponja, ela precisa que uma
+função de \textit{padding} $pad$ seja aplicada. O algoritmo utilizado pelo
+\Keccak{} para \textit{padding} da entrada se chama $pad10*1$ e é definido por
+$pad(M) = b - (|M| \mod b)$, onde $b$ é o tamanho do bloco em \textit{bits}
+da esponja e $|M|$ é o comprimeito da mensagem em \textit{bits}.
+
+O resultado $P$ da função $pad10*1$ tem o formato binário
+$1 \concat 0^{m-2} \concat 1$, ou seja, $m-2$ zeros cercados por uns.
+
+A função \Keccak[c], onde $c$ define a capacidade da função, é definida por:
+
+\begin{center}
+    \Keccak$[c] = Sponge[$\Keccak-$p[1600, 24], pad10*1, 1600-c]$
+\end{center}
+
+Ou seja, é uma aplicaçao de função esponja cujo parâmetro $f$, a função de
+transformação, é \Keccak-$p$ com 1600 \textit{bits} de estado e 24 rodadas,
+utiliza $pad10*1$ como função de \textit{padding} da mensagem e possui bloco
+de tamanho $r = 1600 - c$.
+
+A utilização destes parâmetros define \Keccak$[c]$ como uma função que aceita
+uma mensagem de tamanho arbitrário, onde cada uma das 24 rodadas processa um
+bloco da mensagem de tamanho $r = 1600-c$ e com grau de segurança $c$.
 
 \subsection{Explique a especificação da função SHA-3}
 
 A definição do SHA-3 publicada pelo NIST prevê dois tipos de função baseadas no
 \Keccak, funções de \textit{hash} criptográficas e funções de saída extendida
-(XOF), também chamadas de SHAKE.
+(XOF, ou \textit{extendable output function}), também chamadas de SHAKE.
 
 \begin{enumerate}[label=\roman*.]
     \setlength\itemsep{1em}
 
-    \item Funções de \textit{hash} SHA-3
+    \item Funções de \textit{hash} SHA-3 \newline
 
         As funções de \textit{hash} podem ser definidas genericamente para um
         tamanho do \textit{hash} gerado $d$ e mensagem $M$ com a seguinte
-        fórmula:
+        fórmula: \newline
 
-        $SHA-3(d, M) =$ \Keccak-$p[2d](M \concat 01, d)$ \newline
+        SHA-3$[d](M) =$ \Keccak$[2d](M \concat 01, d)$ \newline
 
         Observando que os bits $01$ são concatenados à mensagem $M$ antes da
-        execução a função. O NIST definiu os tamanhos
-        $d \in \{224, 256, 384, 512\}$ para o SHA-3, existindo portanto
-        SHA3-224, SHA3-256, SHA3-384 e SHA3-512.
+        execução a função. O NIST definiu $d \in \{224, 256, 384, 512\}$ para
+        o SHA-3, existindo portanto SHA3-224, SHA3-256, SHA3-384 e SHA3-512:
 
-    \item Funções de saída extendida
+        \begin{itemize}
+            \setlength\itemsep{0.2em}
+            \item SHA3-224(M) = \Keccak$[448](M \concat 01, 224)$
+            \item SHA3-256(M) = \Keccak$[512](M \concat 01, 256)$
+            \item SHA3-384(M) = \Keccak$[768](M \concat 01, 384)$
+            \item SHA3-512(M) = \Keccak$[1024](M \concat 01, 512)$
+        \end{itemize}
+
+        Estes tamanhos são escolhidos de forma que o SHA-3 seja uma
+        substituição do SHA-2, que utiliza os mesmos tamanhos. \newline
+
+        Seria possível, caso desejado, definir tamanhos maiores, como 1024 ou
+        2048, provendo um espaço muito maior e diminuindo a quantidade de
+        colisões, mas tornando o algoritmo mais lento e diminuindo o grau de
+        segurança do \textit{hash}.
+
+    \item Funções de saída extendida (SHAKE) \newline
+
+        As funções XOF podem ser definidas genericamente para uma capacidade
+        de segurança $c$ e mensagem $M$ com a seguinte fórmula: \newline
+
+        $SHAKE[c](d, M) =$ \Keccak$[c](M \concat 1111, d)$ \newline
+
+        Observando que os bits $1111$ são concatenados à mensagem $M$ antes da
+        execução da função. O NIST definiu $c \in \{128, 256\}$ para o SHAKE,
+        existindo portanto SHAKE-128 e SHAKE-256.
+
+        \begin{itemize}
+            \setlength\itemsep{0.2em}
+            \item SHAKE-128(M) = \Keccak$[128](M \concat 1111, 128)$
+            \item SHAKE-256(M) = \Keccak$[256](M \concat 1111, 256)$
+        \end{itemize}
+
+        Nota-se que o tamanho da saída, diferente das funções SHA-3, é apenas
+        $d = c$, e não $2d$, porque o \Keccak{} pode gerar um comprimento
+        infinito de \textit{bits}, e mais podem ser gerados se ''espremendo``
+        a esponja.
 \end{enumerate}
 
 \subsection{Apresente a análise de segurança}
 
 \subsection{Exemplos}
+
+\begin{itemize}
+    \item SHA3-224("segurança em computação") \newline
+        \texttt{87 0B D5 50 EB 20 44 45 22 AF 19 1A A0 DA 03 CC 11 FB 76 92 70 B2 4F DA BB 64 6F EC} \newline
+    \item SHA3-256("segurança em computação") \newline
+        \texttt{B1 CB C2 AF 9D 81 58 B2 32 DE 7B C0 88 C0 48 E1 F9 0F 7F E2 65 6C 76 A1 AB 44 0A EF 46 EF DF 2E} \newline
+    \item SHA3-384("segurança em computação") \newline
+        \texttt{B7 9C D7 EE 92 2B 78 A3 D5 CB D2 2E 4C 75 69 42 AE 10 86 07 78 D4 BD 90 2E A3 EE 74 38 D1 CD 26 C0 B2 58 06 14 20 89 FB 85 71 07 29 BE 94 26 AB} \newline
+    \item SHA3-512("segurança em computação") \newline
+        \texttt{C9 AC B8 EE F9 8F 4A 4D 11 75 DC 5B 3B CF C9 83 D8 AB C7 88 6E 90 27 C7 8A 6F E6 91 57 0F CE F9 26 10 79 1E 1E DF 00 5C D6 12 98 0E 2D 71 5E 43 CD E9 CE 4F 68 59 BE B5 30 14 D3 4D 64 67 EB 28}
+\end{itemize}
 
 \let\thesubsection\oldsubsection%
