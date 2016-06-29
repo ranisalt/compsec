@@ -5,11 +5,11 @@
 
 \subsection{O que é e para que serve o \textit{state array}?}
 
-O \textit{state array} do Keccak é uma representação do estado do algoritmo e
+O \textit{state array} do \Keccak é uma representação do estado do algoritmo e
 uma matriz de três dimensões, de tamanho $5 \times 5 \times w$, onde $w$ é o
 comprimento do bloco a ser cifrado. Na maioria das linguagens de programação,
 é uma estrutura muito simples de ser representada, mas tem um uso bastante
-complexo no Keccak.
+complexo no \Keccak.
 
 As partes bidimensionais dessa matriz são chamadas de \textit{plane} (plano),
 \textit{slice} (fatia) e \textit{sheet} (folha), e as unidimensionais são
@@ -19,7 +19,7 @@ por sua linha, coluna e pista.
 
 \begin{figure}[ht]
     \centering
-    \includegraphics[width=0.7\textwidth]{statearray.png}
+    \includegraphics[width=0.7\textwidth]{images/statearray.png}
     \caption{Diagrama do \textit{state array}}
     \label{fig:statearray}
 \end{figure}
@@ -29,11 +29,15 @@ em termos de posições nessa matriz de forma prática. O estado guarda valores
 parciais do \textit{hash} e todas as funções internas recebem como parâmetro
 o estado atual e retornam como saída o estado atualizado.
 
+O primeiro valor do estado é gerado à partir da mensagem $S$ a ser cifrada, e o
+resultado do \text{hash} é o estado após o último passo convertido novamente em
+\textit{string}, passos estes que serão explicados nas próximas questões.
+
 \subsection{Como é feita a conversão de \textit{strings} para
     \textit{state array}?}
 
 Seja $S$ uma \textit{string} de $b$ \textit{bits} que representa o estado da
-permutação Keccak-$p[b, n_{r}]$. O \textit{state array} $A$ é definido da
+permutação \Keccak-$p[b, n_{r}]$. O \textit{state array} $A$ é definido da
 seguinte forma no SHA-3, usando $b = 1600$ e $w = 64$:
 
 Para toda tripla $(x, y, z)$ tal que $0 \leq x < 5$, $0 \leq y < 5$ e

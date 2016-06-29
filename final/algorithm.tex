@@ -9,10 +9,10 @@ poderiam enfraquecer ambos os algoritmos, o NIST buscou um algoritmo com uma
 estrutura diferente que pudesse resistir e substituí-los nesse caso.
 
 O algoritmo escolhido como SHA-3 é baseado na família de funções esponja
-\textbf{Keccak}, mais especificamente na variante com 1600 bits de largura da
+\textbf{\Keccak}, mais especificamente na variante com 1600 bits de largura da
 função de permutação~\cite{fips:2015}.
 
-O Keccak segue a a estrutura dos algoritmos de \textit{hash} comuns, onde os
+O \Keccak segue a a estrutura dos algoritmos de \textit{hash} comuns, onde os
 blocos $P$ da mensagem a ser cifrada vão sendo concatenados alternadamente com
 aplicações de uma função de transformação $f$, de forma que a passagem $i$
 tenha o seguinte formato:
@@ -22,7 +22,7 @@ tenha o seguinte formato:
 \end{center}
 
 Adicionalmente, explorando essa forma genérica de algoritmos de hash e de uma
-função $f$ específica, o Keccak permite que tanto sua entrada quanto sua saída
+função $f$ específica, o \Keccak permite que tanto sua entrada quanto sua saída
 tenham um tamanho variável, e possa ser usado não somente para verificar a
 integridade de uma mensagem, mas como um gerador de números pseudoaleatórios,
 além de outras aplicações.
@@ -76,9 +76,9 @@ Os últimos $c$ bits não são diretamente afetados pela entrada $M$ e não são
 produzidos como saída da função. A função esponja produz uma quantidade
 indefinida de bits aleatórios.
 
-\subsection{Função Keccak}
+\subsection{Função \Keccak}
 
-A função de compressão Keccak ($f$, não confundir com a compressão da esponja)
+A função de compressão \Keccak ($f$, não confundir com a compressão da esponja)
 é uma função que tem como entrada um valor $S$ de $b$ \textit{bits}, de
 $r + c = 1600$ bits no SHA-3. Esse valor $S$ é então dividido em uma matriz $A$
 $5 \times 5$, onde cada célula contém 64 \textit{bits}. As posições dessa
@@ -101,22 +101,31 @@ As funções possuem a seguinte fórmula:
     \setlength\itemsep{1em}
 
     \item $\theta(M[x, y, z]) = M[x, y, z] \oplus \sum\limits_{y'=0}^{4}M[x-1, y', z] \oplus \sum\limits_{y'=0}^{4}M[x+1, y', z-1]$ \newline
-        Este passo é uma função de substituição que utiliza bits de células adjacentes, cada \textit{bit} dependento de outros 11, o que provê boa difusão, o que é importante para o efeito avalanche.
+        Este passo é uma função de substituição que utiliza bits de células
+        adjacentes, cada \textit{bit} dependento de outros 11, o que provê boa
+        difusão, que é importante para o efeito avalanche.
 
     \item $\rho(M[x, y, z]) = \begin{cases}
             M[x, y, z], \mbox{se } x=y=0 \\
             M[x, y, z - \frac{(t+1)(t+2)}{2}] \mid 0 \leq t < 24 \land \begin{pmatrix}0 & 1 \\ 2 & 3\end{pmatrix} \begin{pmatrix}0 \\ 1\end{pmatrix} = \begin{pmatrix}x \\ y\end{pmatrix}\mbox{ em } GF(5)
         \end{cases}$ \newline
-        Função de espalhamento dos \textit{bits} de uma célula para auxiliar na difusão de forma mais rápida.
+        Função de espalhamento dos \textit{bits} de uma célula para auxiliar na
+        difusão de forma mais rápida.
 
     \item $\pi(M[x, y]) = M[x', y'], \mid \begin{pmatrix}x \\ y\end{pmatrix}\begin{pmatrix}0 & 1 \\ 2 & 3\end{pmatrix} = \begin{pmatrix}x' \\ y'\end{pmatrix}$ \newline
-        Outra função de espalhamento dos \textit{bits}, mas entre células diferentes.
+        Outra função de espalhamento dos \textit{bits}, mas entre células
+        diferentes.
 
     \item $\chi(M[x, y, z]) = M[x, y, z] \oplus (\neg{M}[x+1, y, z] \land M[x+2, y, z])$ \newline
-        Esta função é uma substituição baseada no valor atual do bit e dos próximos 2 bits, tornando o Keccak uma função não-linear, característica que os outros passos não provêm.
+        Esta função é uma substituição baseada no valor atual do bit e dos
+        próximos 2 bits, tornando o \Keccak uma função não-linear,
+        característica que os outros passos não provêm.
 
-    \item $\iota(M[x, y, z]) = M[x, y, z] \oplus RC_{i}$, onde $RC_{i}$ é a constante da rodada citada acima e diferente para cada rodada $i$. \newline
-        Função de substituição baseada em uma tabela e que envolve uma constante que é diferente a cada passo da função aplicado.
+    \item $\iota(M[x, y, z]) = M[x, y, z] \oplus RC_{i}$, onde $RC_{i}$ é a
+        constante da rodada citada acima e diferente para cada rodada $i$.
+
+        Função de substituição baseada em uma tabela e que envolve uma
+        constante que é diferente a cada passo da função aplicado.
 \end{itemize}
 
 \subsection{Parâmetros do SHA-3}
