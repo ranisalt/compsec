@@ -240,7 +240,8 @@ simplificadas para permitir ataques.
 
 A função \textit{iota} é somente aplicada na primeira linha e coluna, ou seja,
 os parâmetros $x$ e $y$ são sempre 0, e seu efeito é difundido para as outras
-linhas e colunas através dos passos \textit{theta} e \textit{chi}.
+linhas e colunas através dos passos \textit{theta} e
+\textit{chi}~\cite{keccak:2011}.
 
 \subsection{Explicar a permutação \Keccak-$p[b,n_r]$}
 
@@ -402,6 +403,34 @@ A definição do SHA-3 publicada pelo NIST prevê dois tipos de função baseada
 \end{enumerate}
 
 \subsection{Apresente a análise de segurança}
+
+Os algoritmos de \text{hash} anteriores ao SHA-3, desde o MD4 até o SHA-2,
+utilizam o mesmo mecanismo chamado de Merkle-Damgard. Embora seja um método
+provadamente eficiente e seguro, o uso do mesmo mecanismo significa que uma
+quebra de outro algoritmo como o SHA-1 também se torna uma ameaça em potencial
+ao SHA-2, até então o algoritmo mais seguro.
+
+Um ataque de força bruta ao SHA-1 tem custo de $2^{80}$, mas já existem ataques
+que reduzem essa complexidade para $2^{58.5}$, o que é um custo factível para
+computadores modernos. Apesar de o único ataque prático já realizado contra o
+SHA-2 ainda ter um custo absurdo de $2^{253.6}$, os ataques realizados em
+outros algoritmos podem também encontrar brechas no SHA-2~\cite{dobbs:2013}.
+
+Na competição que escolheu o SHA-3, houve condições para os competidores para
+evitar que ataques conhecidos pudessem ser explorados nos algoritmos, e um dos
+requisitos era não utilizar o mecanismo de Merkle-Damgard, motivo pelo qual o
+\Keccak utiliza a construção de esponja.
+
+Além disso, enquanto o nível de segurança de Merkle-Damgard é ligado ao tamanho
+da saída - N/2 \textit{bits} de segurança contra colisão e N \textit{bits} de
+segurança contra pré-imagem -, a construção de esponja tem um tamanho da saída
+variável e um núvel de segurança controlado pela capacidade da esponja.
+
+Portanto, a segurança adicional do \Keccak se dá pelo seu formato diferente,
+resistente aos ataques conhecidos atualmente, e pela sua capacidade de
+modificação do parâmetro de segurança conforme desejado. Os tamanhos definidos
+pelo NIST provêm a mesma resistência à pré-imagem, segunda pré-imagem e colisão
+que o já existente SHA-2.
 
 \subsection{Exemplos}
 
