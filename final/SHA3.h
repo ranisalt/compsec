@@ -1,27 +1,22 @@
 #ifndef SHA3_KECCAK_H
 #define SHA3_KECCAK_H
 
+#include <stdint.h> /* size_t, uint8_t, uint64_t */
 #include <array> /* std::array */
-#include <cstdint> /* std::size_t, std::uint64_t */
 #include <string> /* std::string */
 
 template<class T>
-constexpr T rotate_left(T i, std::size_t shamt) {
-    auto width = (sizeof i) * 8u;
-    return (i << shamt) ^ (i >> (width - shamt));
+constexpr T rot_left(T i, size_t shamt) {
+    return (i << shamt) ^ (i >> (((sizeof i) * 8u) - shamt));
 }
 
-template<std::size_t capacity, std::size_t digest_length = capacity / 16u>
+template<size_t capacity, size_t digest_length = capacity / 16u>
 class SHA3 {
-    static_assert(capacity % 16 == 0, "Capacity must be multiple of 16.");
+    static_assert(capacity % 16 == 0, "Capacity must be 16k.");
 
-    static constexpr std::size_t rate = 1600u - capacity;
-
-    // lane = 64 bits
-    using lane = std::uint64_t;
-
-    // 5 columns x 5 rows x 64 bits
-    using StateArray = std::array<lane, 5 * 5>;
+    static constexpr size_t rate = 1600u - capacity;
+    using lane = uint64_t; // lane = 64 bits
+    using StateArray = std::array<lane, 5*5>; // 5 col x 5 row x 64 b
 
     // round constant generator
     class LFSR {
@@ -49,18 +44,13 @@ public:
 
 private:
     // calcula posição da lane (x, y) no state array
-    constexpr std::size_t lane_xy(std::size_t x, std::size_t y) const {
-        return x + 5 * y;
+    static constexpr size_t lane_xy(size_t x, size_t y) {
+        return x + 5*y;
     }
 
-    constexpr std::uint64_t round_constant(std::size_t round) const {
-
-    }
-
-    StateArray theta(const StateArray &state) const {
+    static StateArray theta(const StateArray &state) {
         /* de acordo com Keccak Reference 2.3.2 */
         std::array<lane, 5> C;
-
         for (auto x = 0u; x < 5u; ++x) {
             C[x] = state[lane_xy(x, 0)];
             for (auto y = 1u; y < 5u; ++y) {
@@ -71,66 +61,65 @@ private:
         auto A = state;
         for (auto i = 0u; i < 5u; ++i) {
             // i + 4 === i - 1 (mod 5)
-            auto D = C[(i + 4) % 5] xor rotate_left(C[(i + 1) % 5], 1);
+            auto D = C[(i+4) % 5] xor rot_left(C[(i+1) % 5], 1);
             for (auto j = 0u; j < 5u; ++j) {
                 A[lane_xy(i, j)] ^= D;
             }
         }
-
         return A;
     }
 
-    StateArray rho(const StateArray &state) const {
+    static StateArray rho(const StateArray &state) {
         /* de acordo com Keccak Reference 2.3.4 */
         auto A = state;
         auto x = 1u, y = 0u;
         for (auto t = 0u; t < 24; ++t) {
-            auto shamt = ((t + 1) * (t + 2)) / 2;
-            A[lane_xy(x, y)] = rotate_left(state[lane_xy(x, y)], shamt);
-
+            auto shamt = ((t+1) * (t+2)) / 2;
+            A[lane_xy(x, y)] = rot_left(state[lane_xy(x, y)], shamt);
         }
+        return state;
     }
 
-    StateArray pi(const StateArray &state) const {
+    static StateArray pi(const StateArray &state) {
         /* de acordo com Keccak Reference 2.3.3 */
         auto A = state;
         for (auto x = 0u; x < 5u; ++x) {
             for (auto y = 0u; y < 5u; ++y) {
-                A[lane_xy(y, (2 * x + 3 * y) % 5)] = state[lane_xy(x, y)];
+                A[lane_xy(y, (2*x + 3*y) % 5)] = state[lane_xy(x, y)];
                 auto oldX = x;
                 x = y;
-                y = 2 * oldX + 3 * y;
+                y = 2*oldX + 3*y;
             }
         }
         return A;
     }
 
-    StateArray chi(const StateArray &state) const {
+    static StateArray chi(const StateArray &state) {
         /* de acordo com Keccak Reference 2.3.1 */
         auto A = state;
         for (auto x = 0u; x < 5u; ++x) {
             for (auto y = 0u; y < 5u; ++y) {
-                auto p1 = compl state[lane_xy((x + 1) % 5, y)];
-                auto p2 = state[lane_xy((x + 2) % 5, y)];
+                auto p1 = compl state[lane_xy((x+1) % 5, y)];
+                auto p2 = state[lane_xy((x+2) % 5, y)];
                 A[lane_xy(x, y)] ^= p1 bitand p2;
             }
         }
         return A;
     }
 
-    StateArray iota(const StateArray &state, LFSR &lfsr) const {
+    static StateArray iota(const StateArray &state, LFSR &lfsr) {
         /* de acordo com Keccak Reference 2.3.5 */
         auto A = state;
         for (auto i = 0u; i < 7u; ++i) {
             if (lfsr()) {
-                // 2^i - 1
-                A[0, 0] ^= (lane) 1u << ((1u << i) - 1u);
+                // bit 2^i - 1
+                A[lane_xy(0, 0)] ^= (lane) 1u << ((1u << i) - 1u);
             }
         }
         return A;
     }
 
-    StateArray step_mappings(const StateArray &state) const {
+    static StateArray step_mappings(const StateArray &state) {
         auto A = state;
         auto lfsr = LFSR{};
         for (auto i = 0u; i < 24u; ++i) {
