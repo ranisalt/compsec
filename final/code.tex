@@ -2,11 +2,52 @@
 
 O algoritmo foi implementado em \textbf{C++11} em uma classe \textit{template},
 que pode ser configurada para diferentes capacidades e tamanhos de saída em
-tempo de compilação:
+tempo de compilação. Dessa forma, é possível declarar diferentes instâncias de
+\Keccak, como será mostrado após o código. Além disso, se faz necessária uma
+função de rotação lógica de inteiros, denominada \texttt{rotl}:
 
-\lstinputlisting[language={[11]C++}]{Keccak.h}
+\lstinputlisting[language={[11]C++},firstline=4,lastline=182]{Keccak.h}
 
 As cinco funções de transformação $\theta$, $\rho$, $\pi$, $\chi$ e $\iota$
 foram implementadas como métodos que recebem o estado atual e retornam o estado
-transformado, com a última também recebendo o gerador das constantes de cada
-rodada.
+transformado, com a última ($\iota$) também recebendo o gerador das constantes
+de cada rodada.
+
+Além disso, a classe funciona como uma máquina de estados, que está
+``absorvendo'' (\texttt{ABSORBING}) ou ``espremendo'' (\texttt{SQUEEZING}),
+necessariamente nesta ordem. Um objeto \texttt{Keccak} inicializa com a fase
+\texttt{ABSORBING} e muda para a fase \texttt{SQUEEZING} quando a função de
+padding é executada.
+
+Além disso, uma função auxiliar \texttt{squeeze\_more} gera mais saída, para
+uso no caso das funções de saída extendida, transformando o estado conforme
+necessário e armazenando no \textit{stream} \texttt{output}, que a função que
+retorna o hash consulta.
+
+O atributo \texttt{npos} possui dois significados: na fase de absorção,
+representa quantos \textit{bytes} já foram inseridos no estado; após, informa
+quantos \textit{bytes} estão disponíveis em \textit{output}, uma vez que
+\textit{streams} não possuem um contador de quantidade de dados disponível.
+
+Uma classe \texttt{SHA3} foi declarada contendo uma única função \texttt{hash},
+que automaticamente cria uma instância de \texttt{Keccak}, insere a mensagem
+no estado, aplica o padding e retorna o \textit{hash} no tamanho desejado,
+usando como padrão a proporção indicada pelo \textbf{FIPS 202}.
+
+Uma classe \texttt{SHAKE} foi declarada contendo as funções \texttt{update},
+\texttt{finalize} e \texttt{digest}, que inserem mais valores no estado, trocam
+o estado da função e extraem uma quantidade variável de \textit{bytes},
+respectivamente com assinaturas baseadas em outras bibliotecas do gênero, como
+o \textbf{OpenSSL}.
+
+Dessa forma, é trivial declarar funções com os parâmetros definidos pelo NIST:
+
+\lstinputlisting[language={[11]C++},firstline=184,lastline=219]{Keccak.h}
+
+É importante ressaltar que a todas as funções podem ser aplicadas em uma
+\textit{lane} em vez de aplicadas \textit{bit} a \textit{bit}, por isso é mais
+eficiente trabalhar com inteiros (neste caso, \texttt{uint64\_t}) do que com
+\textit{bitsets}. Está disponível no documento do FIPS 202~\cite{fips:2015} e
+na referência do \Keccak~\cite{keccak:2011} o pseudocódigo que gera os mesmos
+resultados. O código acima completo está disponível no
+GitHub~\cite{althoff:2016}.
