@@ -70,5 +70,23 @@ int main()
     assert(SHA3_512::hash("") == sha512hash);
     std::cout << "SHA3_512(\"\") = " << hash_str(sha512hash) << std::endl;
 
+    std::string  shake128hash[] = {
+            std::string{"\x7f\x9c\x2b\xa4\xe8\x8f\x82\x7d\x61\x60\x45\x50\x76\x05\x85\x3e", 16u},
+            std::string{"\x7f\x9c\x2b\xa4\xe8\x8f\x82\x7d\x61\x60\x45\x50\x76\x05\x85\x3e", 16u},
+    };
+    auto shake128 = SHAKE_128{};
+    shake128.finalize();
+    assert(shake128.digest(16u) == shake128hash[0]);
+    assert(shake128.digest(16u) != shake128hash[1]);
+
+    std::string shake256hash[] = {
+            std::string{"\x46\xb9\xdd\x2b\x0b\xa8\x8d\x13\x23\x3b\x3f\xeb\x74\x3e\xeb\x24", 16u},
+            std::string{"\x3f\xcd\x52\xea\x62\xb8\x1b\x82\xb5\x0c\x27\x64\x6e\xd5\x76\x2f", 16u},
+    };
+    auto shake256 = SHAKE_256{};
+    shake256.finalize();
+    assert(shake256.digest(16u) == shake256hash[0]);
+    assert(shake256.digest(16u) == shake256hash[1]);
+
     return 0;
 }

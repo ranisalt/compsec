@@ -236,7 +236,7 @@ using SHA3_224 = SHA3<448u, 28u>;
 using SHA3_256 = SHA3<512u, 32u>;
 using SHA3_384 = SHA3<768u, 48u>;
 using SHA3_512 = SHA3<1024u, 64u>;
-using SHAKE_128 = SHAKE<128u>;
-using SHAKE_256 = SHAKE<256u>;
+using SHAKE_128 = SHAKE<256>;
+using SHAKE_256 = SHAKE<512>;
 
 #endif //SHA3_KECCAK_H
