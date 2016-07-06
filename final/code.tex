@@ -1,0 +1,12 @@
+\section{Implementação}
+
+O algoritmo foi implementado em \textbf{C++11} em uma classe \textit{template},
+que pode ser configurada para diferentes capacidades e tamanhos de saída em
+tempo de compilação:
+
+\lstinputlisting[language={[11]C++}]{Keccak.h}
+
+As cinco funções de transformação $\theta$, $\rho$, $\pi$, $\chi$ e $\iota$
+foram implementadas como métodos que recebem o estado atual e retornam o estado
+transformado, com a última também recebendo o gerador das constantes de cada
+rodada.

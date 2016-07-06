@@ -9,6 +9,26 @@
 \DeclareMathOperator\concat{\lvert\rvert}
 \newcommand\Keccak{\textsc{Keccak}}
 
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{mystyle}{
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{blue},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\footnotesize\ttfamily,
+    breaklines=true,
+    numbers=left,
+    showstringspaces=false,
+    extendedchars=true,
+    inputencoding=utf8,
+    literate={ç}{{\c{c}}}1 {ã}{{\~a}}1
+}
+\lstset{style=mystyle}
+
 \sloppy
 
 \title{Função de Hash Criptográfica SHA-3}
@@ -26,6 +46,7 @@ Segurança em Computação}
 \input{hash}
 \input{algorithm}
 \input{questions}
+\input{code}
 
 \bibliographystyle{sbc/sbc}
 \bibliography{sha-3}
