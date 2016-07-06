@@ -3,6 +3,7 @@
 
 #include <stdint.h> /* size_t, uint8_t, uint64_t */
 #include <array> /* std::array */
+#include <sstream> /* std::stringstream */
 #include <string> /* std::string */
 
 template<class T>
@@ -10,11 +11,13 @@ constexpr T rot_left(T i, size_t shamt) {
     return (i << shamt) ^ (i >> (((sizeof i) * 8u) - shamt));
 }
 
-template<size_t capacity, size_t digest_length = capacity / 16u>
-class SHA3 {
+template<size_t capacity>
+class Keccak {
     static_assert(capacity % 16 == 0, "Capacity must be 16k.");
 
-    static constexpr size_t rate = 1600u - capacity;
+    static constexpr auto rate = 1600u - capacity;
+    static constexpr auto rateInBytes = rate / 8u;
+
     using lane = uint64_t; // lane = 64 bits
     using StateArray = std::array<lane, 5*5>; // 5 col x 5 row x 64 b
 
@@ -36,10 +39,21 @@ class SHA3 {
     };
 
 public:
-    SHA3() = default;
+    Keccak() = default;
 
-    std::string hash(const std::string &message) {
-        auto state = absorb(message, 0x01);
+    Keccak& update(const std::string &message) {
+        if (phase != ABSORBING) {
+            throw std::logic_error("Must not absorb after squeezing");
+        }
+        absorb(message);
+        return *this;
+    }
+
+    std::string digest(size_t digest_length = capacity / 16u) {
+        if (phase == ABSORBING) {
+            pad("\x01");
+        }
+        return squeeze(digest_length);
     }
 
 private:
@@ -61,7 +75,7 @@ private:
         auto A = state;
         for (auto i = 0u; i < 5u; ++i) {
             // i + 4 === i - 1 (mod 5)
-            auto D = C[(i+4) % 5] xor rot_left(C[(i+1) % 5], 1);
+            auto D = C[(i + 4) % 5] xor rot_left(C[(i + 1) % 5], 1);
             for (auto j = 0u; j < 5u; ++j) {
                 A[lane_xy(i, j)] ^= D;
             }
@@ -75,7 +89,10 @@ private:
         auto x = 1u, y = 0u;
         for (auto t = 0u; t < 24; ++t) {
             auto shamt = ((t+1) * (t+2)) / 2;
-            A[lane_xy(x, y)] = rot_left(state[lane_xy(x, y)], shamt);
+            A[lane_xy(x, y)] = rot_left(state[lane_xy(x, y)], shamt % 64);
+            auto oldX = x;
+            x = y % 5;
+            y = (2*oldX + 3*y) % 5;
         }
         return state;
     }
@@ -86,9 +103,6 @@ private:
         for (auto x = 0u; x < 5u; ++x) {
             for (auto y = 0u; y < 5u; ++y) {
                 A[lane_xy(y, (2*x + 3*y) % 5)] = state[lane_xy(x, y)];
-                auto oldX = x;
-                x = y;
-                y = 2*oldX + 3*y;
             }
         }
         return A;
@@ -128,28 +142,77 @@ private:
         return A;
     }
 
-    StateArray absorb(const std::string &input, uint8_t suffix) {
-        constexpr auto rateInBytes = rate / 8u;
-
-        StateArray state;
-        StateArray::size_type idx = 0;
-
+    void absorb(const std::string &input) {
         for (const auto &ch: input) {
-            state[idx] ^= ch;
+            auto laneNo = npos / 8u;
+            auto offset = npos % 8u;
+            state[laneNo] ^= (lane)static_cast<uint8_t>(ch) << (offset * 8u);
 
-            ++idx;
-            if (idx == rateInBytes) {
+            ++npos;
+            if (npos == rateInBytes) {
                 state = step_mappings(state);
-                idx = 0u;
+                npos = 0u;
             }
         }
-
-        state[idx] ^= suffix;
-
-        /* TODO: pad10*1 */
-
-        return state;
     }
+
+    void pad(const std::string &suffix) {
+        auto q = rateInBytes - npos;
+        auto laneNo = npos / 8u;
+        auto offset = npos % 8u;
+        state[laneNo] ^= (lane)0x06u << (offset * 8u);
+
+        laneNo = (rateInBytes-1) / 8u;
+        offset = (rateInBytes-1) % 8u;
+        state[laneNo] ^= (lane)0x80u << (offset * 8u);
+
+        npos = 0u;
+        state = step_mappings(state);
+        phase = SQUEEZING;
+    }
+
+    std::string squeeze(size_t length) {
+        std::stringstream ss;
+        ss << std::hex;
+
+        auto amt = 0u;
+        while (amt < length) {
+            for (auto x = 0u; x < 5u; ++x) {
+                for (auto y = 0u; y < 5u; ++y) {
+                    auto lane = state[lane_xy(x, y)];
+                    for (auto z = sizeof lane; z > 0u; --z) {
+                        ss << (char) (lane >> (z - 1) * 8u);
+
+                        ++npos;
+                        if (npos == rateInBytes) {
+                            state = step_mappings(state);
+                            npos = 0u;
+                        }
+
+                        ++amt;
+                        if (amt == length) {
+                            return ss.str();
+                        }
+                    }
+                }
+            }
+            state = step_mappings(state);
+        }
+
+        return ss.str();
+    }
+
+    StateArray state;
+    StateArray::size_type npos = 0;
+    enum Phase {
+        ABSORBING,
+        SQUEEZING,
+    } phase;
 };
+
+using SHA3_224 = Keccak<448u>;
+using SHA3_256 = Keccak<512u>;
+using SHA3_384 = Keccak<768u>;
+using SHA3_512 = Keccak<1024u>;
 
 #endif //SHA3_KECCAK_H
